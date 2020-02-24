@@ -1,6 +1,7 @@
 package Chat;
 
 import java.net.InetAddress;
+import java.util.StringTokenizer;
 
 public class Client
 {

@@ -5,13 +5,13 @@ import Chat.Client;
 public class MessageJoin extends Message
 {
     private final Client newClient;
-//    private final Client connectingTo;
+    private final Client connectingTo;
 
-    public MessageJoin(Client originMessage, Object message, Client newClient/*, Client connectingTo*/)
+    public MessageJoin(Client originMessage, Object message, Client newClient, Client connectingTo)
     {
         super(originMessage, message);
         this.newClient = newClient;
-//        this.connectingTo = connectingTo;
+        this.connectingTo = connectingTo;
     }
 
     public Client getNewClient()
@@ -19,8 +19,8 @@ public class MessageJoin extends Message
         return newClient;
     }
 
-//    public Client getConnectingTo()
-//    {
-//        return connectingTo;
-//    }
+    public Client getConnectingTo()
+    {
+        return connectingTo;
+    }
 }

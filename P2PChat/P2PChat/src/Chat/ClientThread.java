@@ -1,6 +1,10 @@
 package Chat;
 
+import Util.Util;
+
+import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class ClientThread implements Runnable
@@ -8,8 +12,7 @@ public class ClientThread implements Runnable
     private Thread clientThread;
     private Client nextClient;
     private Socket nextClientSocket;
-    private ObjectInputStream inputStream;
-    private static boolean interrupt;
+    private ObjectOutputStream outputStream;
 
     public ClientThread(Client nextClient, Socket nextClientSocket)
     {
@@ -19,13 +22,29 @@ public class ClientThread implements Runnable
 
     public void start()
     {
-
+        if (null == clientThread)
+        {
+            clientThread = new Thread(this, "clientThread");
+            clientThread.start();
+        }
     }
 
     @Override
     public void run()
     {
+        try
+        {
+            outputStream = new ObjectOutputStream(nextClientSocket.getOutputStream());
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
 
+        String userInput = "";
+        while (!userInput.equals(Util.quitCommand))
+        {
+
+        }
     }
 
     public static void updateNextNode(Client nextClient, Socket nextClientSocket)
@@ -46,15 +65,5 @@ public class ClientThread implements Runnable
     public Socket getNextClientSocket()
     {
         return nextClientSocket;
-    }
-
-    public boolean isInterrupt()
-    {
-        return interrupt;
-    }
-
-    public static void setInterrupt(boolean _interrupt)
-    {
-        interrupt = _interrupt;
     }
 }
