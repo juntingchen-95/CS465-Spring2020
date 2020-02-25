@@ -7,6 +7,7 @@ public class MessageJoin extends Message
     private final Client newClient;
     private final Client connectingTo;
 
+
     public MessageJoin(Client originMessage, Object message, Client newClient, Client connectingTo)
     {
         super(originMessage, message);
@@ -14,10 +15,15 @@ public class MessageJoin extends Message
         this.connectingTo = connectingTo;
     }
 
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     public Client getNewClient()
     {
         return newClient;
     }
+
 
     public Client getConnectingTo()
     {

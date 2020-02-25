@@ -3,63 +3,81 @@
   <ID>JAVA</ID>
   <OriginalElement />
   <nodes>
-    <node x="778.0" y="393.0">Message.MessageJoin</node>
-    <node x="375.0" y="920.0">Message.MessageQuit</node>
-    <node x="0.0" y="0.0">Chat.ClientThread</node>
-    <node x="432.0" y="93.0">Chat.ChatNode</node>
-    <node x="612.0" y="673.0">Message.Message</node>
-    <node x="48.0" y="475.0">Chat.ServerThread</node>
-    <node x="418.0" y="385.0">Chat.Client</node>
+    <node x="930.0" y="448.0">Message.MessageJoin</node>
+    <node x="0.0" y="203.0">Message.MessageQuit</node>
+    <node x="94.0" y="1198.0">Chat.ClientThread</node>
+    <node x="775.0" y="893.0">Chat.ChatNode</node>
+    <node x="567.0" y="464.0">Message.Message</node>
+    <node x="531.0" y="0.0">Chat.ServerThread</node>
+    <node x="269.0" y="695.0">Chat.Client</node>
   </nodes>
   <notes />
   <edges>
+    <edge source="Chat.ChatNode" target="Message.Message">
+      <point x="5.456702325933804" y="0.0" />
+      <point x="5.456702325933875" y="0.0" />
+    </edge>
     <edge source="Message.MessageQuit" target="Chat.Client">
-      <point x="-4.996422550748561" y="-0.18910762642275358" />
-      <point x="-4.996422550748562" y="-0.18910762642275358" />
-    </edge>
-    <edge source="Chat.ClientThread" target="Chat.Client">
-      <point x="0.0" y="6.317826508154212" />
-      <point x="0.0" y="6.317826508154184" />
-    </edge>
-    <edge source="Message.MessageJoin" target="Message.Message">
-      <point x="-5.97881586938712" y="0.0" />
-      <point x="-5.97881586938712" y="0.0" />
-    </edge>
-    <edge source="Message.Message" target="Chat.Client">
-      <point x="-4.212856555812095" y="2.6929239944994947" />
-      <point x="-4.212856555812088" y="2.6929239944994947" />
+      <point x="4.530915699976333" y="-2.1144273266556297" />
+      <point x="4.530915699976333" y="-2.1144273266556155" />
     </edge>
     <edge source="Chat.ServerThread" target="Chat.Client">
-      <point x="-2.2966187199677393" y="-4.441344667450821" />
-      <point x="-2.296618719967727" y="-4.441344667450821" />
+      <point x="4.562836838159214" y="2.0446319933761288" />
+      <point x="4.562836838159228" y="2.0446319933761288" />
     </edge>
     <edge source="Chat.ChatNode" target="Chat.ServerThread">
-      <point x="3.966036139897465" y="3.0447589949004623" />
-      <point x="3.966036139897483" y="3.044758994900448" />
-    </edge>
-    <edge source="Chat.ChatNode" target="Chat.Client">
-      <point x="4.999734318127288" y="0.05154365276422368" />
-      <point x="4.999734318127288" y="0.05154365276419526" />
+      <point x="-10.352271168652237" y="0.0" />
+      <point x="-10.352271168652237" y="0.0" />
     </edge>
     <edge source="Chat.ChatNode" target="Chat.ClientThread">
-      <point x="-0.3357787275701547" y="4.988712523899437" />
-      <point x="-0.33577872757012983" y="4.988712523899437" />
+      <point x="1.5749206799558237" y="4.745484680393304" />
+      <point x="1.5749206799558237" y="4.745484680393247" />
+    </edge>
+    <edge source="Chat.ChatNode" target="Chat.Client">
+      <point x="-2.559025875472912" y="4.295507719543764" />
+      <point x="-2.5590258754728836" y="4.295507719543792" />
     </edge>
     <edge source="Chat.ServerThread" target="Message.Message">
       <point x="0.0" y="0.0" />
       <point x="0.0" y="0.0" />
     </edge>
+    <edge source="Chat.ClientThread" target="Chat.Client">
+      <point x="-4.766028205749478" y="-1.5116134234652918" />
+      <point x="-4.766028205749478" y="-1.5116134234653202" />
+    </edge>
+    <edge source="Message.MessageJoin" target="Message.Message">
+      <point x="0.0" y="-5.003661579088799" />
+      <point x="0.0" y="-5.003661579088828" />
+    </edge>
+    <edge source="Message.Message" target="Chat.Client">
+      <point x="3.5155030323383016" y="3.5554519304330654" />
+      <point x="3.5155030323383016" y="3.5554519304330654" />
+    </edge>
+    <edge source="Chat.ServerThread" target="Message.MessageQuit">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
+    </edge>
     <edge source="Message.MessageJoin" target="Chat.Client">
-      <point x="0.0" y="-5.042198065109929" />
-      <point x="0.0" y="-5.042198065109915" />
+      <point x="1.8918487073795518" y="4.628272730553618" />
+      <point x="1.8918487073795802" y="4.628272730553618" />
     </edge>
     <edge source="Message.MessageQuit" target="Message.Message">
-      <point x="-4.0252791867668405" y="-2.9659951902492594" />
-      <point x="-4.025279186766852" y="-2.9659951902492594" />
+      <point x="0.0" y="5.61217647716029" />
+      <point x="0.0" y="5.612176477160233" />
+    </edge>
+    <edge source="Chat.ServerThread" target="Chat.ChatNode">
+      <point x="10.352271168652265" y="0.0" />
+      <point x="10.352271168652237" y="0.0" />
+    </edge>
+    <edge source="Chat.ServerThread" target="Message.MessageJoin">
+      <point x="0.0" y="0.0" />
+      <point x="0.0" y="0.0" />
     </edge>
   </edges>
-  <settings layout="Orthogonal" zoom="0.8679750223015165" x="528.5" y="550.5" />
-  <SelectedNodes />
+  <settings layout="Orthogonal" zoom="0.829523187459177" x="627.5" y="755.5" />
+  <SelectedNodes>
+    <node>Message.Message</node>
+  </SelectedNodes>
   <Categories>
     <Category>Fields</Category>
     <Category>Constructors</Category>

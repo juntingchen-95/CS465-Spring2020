@@ -14,8 +14,8 @@ public class ServerThread implements Runnable
     private Client precClient;
     private Socket precNodeSocket;
     private ObjectInputStream inputStream;
-    private boolean interrupt;
     private boolean clientQuit;
+
 
     public ServerThread(Client precClient, Socket precNodeSocket)
     {
@@ -23,9 +23,9 @@ public class ServerThread implements Runnable
         this.precNodeSocket = precNodeSocket;
         this.serverThread = null;
         this.inputStream = null;
-        this.interrupt = false;
         this.clientQuit = false;
     }
+
 
     public void start()
     {
@@ -36,9 +36,24 @@ public class ServerThread implements Runnable
         }
     }
 
+
     @Override
     public void run()
     {
+        // Wait for ChatNode to update the socket: either because the user started a new chat, or because the user connected to
+        // an existing chat and ChatNode needs to wait for the precedent client to connect, then to update the socket
+        synchronized (ChatNode.interruptServer)
+        {
+            try
+            {
+                ChatNode.interruptServer.wait();
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        // Retrieve the ObjectInputStream linked to the socket of the precedent node
         try
         {
             inputStream = new ObjectInputStream(precNodeSocket.getInputStream());
@@ -65,6 +80,7 @@ public class ServerThread implements Runnable
                 e.printStackTrace();
             }
 
+            // If we read a message from the precedent node
             if (null != m)
             {
                 if (m instanceof MessageJoin)
@@ -82,6 +98,7 @@ public class ServerThread implements Runnable
         }
     }
 
+
     /**
      * Function to parse a regular (usually text) message from another client of the chat.
      * As it is a regular message, its content is just displayed to the user.
@@ -92,6 +109,7 @@ public class ServerThread implements Runnable
     {
         System.out.println(m.getOriginMessage().getAlias().toUpperCase() + ": " + m.getMessage().toString());
     }
+
 
     /**
      * Function to handle the reception of a join message from another client of the chat.
@@ -124,8 +142,10 @@ public class ServerThread implements Runnable
                     e.printStackTrace();
                 }
             }
+            // Else: a client joined the chat, but we are not directly concerned by it. We thus do nothing in particular.
         }
     }
+
 
     /**
      * Function to handle the reception of a quit message from another client of the chat.
@@ -138,10 +158,19 @@ public class ServerThread implements Runnable
     {
         // The client leaving the chat is the one directly connected to this node
         // The client connected to this leaving client will thus connected to this client (us)
-        //TODO ? Not sure how to safely update everything, or what to synchronize
         if (m.getQuittingClient().equals(this.precClient))
         {
-            serverThread.interrupt(); // interrupt the thread so the socket can be updated by the ChatNode thread
+            // Wait on the object to be freed by ChatNode
+            synchronized (ChatNode.interruptServer)
+            {
+                try
+                {
+                    ChatNode.interruptServer.wait();
+                } catch (InterruptedException e)
+                {
+                    e.printStackTrace();
+                }
+            }
         } else {
             // The client leaving the chat is the client which we are connected to (i.e., our successor in the chat)
             if (m.getQuittingClient().equals(ChatNode.getClientThread().getNextClient()))
@@ -150,30 +179,34 @@ public class ServerThread implements Runnable
                 // Idea: use the queue instead of some booleans trying to synchronize the threads
                 ChatNode.getMessageQueue().add(m);
             }
+            // Else: a client we are not directly connected to left the chat, and so we do not need to do anything in particular.
         }
     }
 
+    /**
+     * Update the precedent node after a new client's connection
+     * @param precClientSocket The socket of the newly connected client
+     */
     public void updatePrecNode(Socket precClientSocket)
     {
         precNodeSocket = precClientSocket;
-        try
-        {
-            serverThread.join();
-        } catch (InterruptedException e)
-        {
-            e.printStackTrace();
-        }
     }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     public Thread getServerThread()
     {
         return serverThread;
     }
 
+
     public Client getPrecClient()
     {
         return precClient;
     }
+
 
     public Socket getPrecNodeSocket()
     {

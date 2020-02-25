@@ -14,11 +14,13 @@ public class ClientThread implements Runnable
     private Socket nextClientSocket;
     private ObjectOutputStream outputStream;
 
+
     public ClientThread(Client nextClient, Socket nextClientSocket)
     {
         this.nextClient = nextClient;
         this.nextClientSocket = nextClientSocket;
     }
+
 
     public void start()
     {
@@ -28,6 +30,7 @@ public class ClientThread implements Runnable
             clientThread.start();
         }
     }
+
 
     @Override
     public void run()
@@ -47,20 +50,27 @@ public class ClientThread implements Runnable
         }
     }
 
+
     public static void updateNextNode(Client nextClient, Socket nextClientSocket)
     {
 
     }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
     public Thread getClientThread()
     {
         return clientThread;
     }
 
+
     public Client getNextClient()
     {
         return nextClient;
     }
+
 
     public Socket getNextClientSocket()
     {

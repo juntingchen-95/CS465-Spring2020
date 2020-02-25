@@ -4,9 +4,9 @@ import Chat.Client;
 
 public class MessageQuit extends Message
 {
-
     private final Client quittingClient;
     private final Client wasConnectedTo;
+
 
     public MessageQuit(Client originMessage, Object message, Client quittingClient, Client wasConnectedTo)
     {
@@ -15,10 +15,15 @@ public class MessageQuit extends Message
         this.wasConnectedTo = wasConnectedTo;
     }
 
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
     public Client getQuittingClient()
     {
         return quittingClient;
     }
+
 
     public Client getWasConnectedTo()
     {
