@@ -6,15 +6,17 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ServerThread implements Runnable {
 
     private Thread serverThread;
     private ServerSocket serverSocket;
+    public static AtomicBoolean quit = new AtomicBoolean(false);
 
     public ServerThread(int listeningPort) throws IOException {
         serverSocket = new ServerSocket(listeningPort);
-        System.out.println("Node start listen port " + listeningPort);
+        System.out.println("System message: Node start listen port " + listeningPort);
     }
 
     public void start() {
@@ -27,11 +29,10 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         Socket client;
-        boolean quit = false;
-        while (!quit) {
+        while (quit.compareAndSet(false, false)) {
             try {
                 client = serverSocket.accept();
-                System.out.println("New node (IP: " + client.getInetAddress().getHostAddress() +") connected.");
+                System.out.println("System message: New node (IP: " + client.getInetAddress().getHostAddress() +") connected.");
                 ServerListeningThread serverListeningThread = new ServerListeningThread(client);
                 serverListeningThread.start();
             } catch (IOException e) {
@@ -59,8 +60,9 @@ public class ServerThread implements Runnable {
         @Override
         public void run() {
             try {
+                boolean quitThread = false;
                 ObjectInputStream objectInputStream = new ObjectInputStream(client.getInputStream());
-                while (true) {
+                while (!quitThread) {
                     Message message = (Message) objectInputStream.readObject();
                     switch (message.getType()) {
                         case "initialize":
@@ -79,11 +81,20 @@ public class ServerThread implements Runnable {
                                 ChatNode.messageQueue.notify();
                             }
                             break;
+                        case "connectNewNode":
+                        case "connectNewNode2":
+                        case "leave":
+                            synchronized (ChatNode.messageQueue) {
+                                ChatNode.messageQueue.offer(message);
+                                ChatNode.messageQueue.notify();
+                            }
+                            break;
                         case "normal":
                             ChatNode.NodeInfo senderNode = ((MessageNormal) message).getNodeInfo();
                             synchronized (ChatNode.nodeInfo) {
                                 if (!senderNode.getDescription().equals(ChatNode.nodeInfo.getDescription())) {
-                                    System.out.println(((MessageNormal) message).getContent());
+                                    System.out.println("User message (From " + ((MessageNormal) message).getNodeInfo().getDescription()
+                                            + "): " + ((MessageNormal) message).getContent());
                                     synchronized (ChatNode.messageQueue) {
                                         ChatNode.messageQueue.offer(message);
                                         ChatNode.messageQueue.notify();
@@ -91,10 +102,17 @@ public class ServerThread implements Runnable {
                                 }
                             }
                             break;
+                        case "quit":
+                            System.out.println("Get quit request");
+                            quitThread = true;
+                            synchronized (ServerThread.quit) {
+                                ServerThread.quit.compareAndSet(false, true);
+                            }
+                            break;
                     }
                 }
             } catch (IOException | ClassNotFoundException e) {
-                System.out.println("Node (IP: " + client.getInetAddress().getHostAddress() +") disconnected.");
+                System.out.println("System message: Node (IP: " + client.getInetAddress().getHostAddress() +") disconnected.");
             } finally {
                 try {
                     client.close();
