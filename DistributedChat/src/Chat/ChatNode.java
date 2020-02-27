@@ -62,10 +62,10 @@ public class ChatNode {
                         Util.listNetworkInterfaces();
                         break;
                     case Util.startCommand:
-                        setupInitialNode(userCommand, "initialize");
+                        setup(userCommand, "initialize");
                         break;
                     case Util.joinCommand: // The user wants to join an existing chat
-                        setupInitialNode(userCommand, "join");
+                        setup(userCommand, "join");
                         break;
                     case Util.chatCommand:
                         stopReadInput = true;
@@ -79,14 +79,19 @@ public class ChatNode {
 
         while (true) {
             System.out.println("Please input chat message");
+            String messageString = in.nextLine();
             synchronized (messageQueue) {
-                messageQueue.offer(new MessageNormal("normal", in.nextLine(), nodeInfo));
+                if (messageString.equals("/quit")) {
+                    messageQueue.offer(new MessageUtility("selfLeave", nodeInfo));
+                } else {
+                    messageQueue.offer(new MessageNormal("normal", messageString, nodeInfo));
+                }
                 messageQueue.notify();
             }
         }
     }
 
-    private static void setupInitialNode(String command, String messageType) throws IOException {
+    private static void setup(String command, String messageType) throws IOException {
         StringTokenizer tokenizer = new StringTokenizer(command, " ");
 
         // Check there are 3 tokens: the command, the IP address, and the port
