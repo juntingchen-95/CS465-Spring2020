@@ -46,36 +46,31 @@ public class ChatNode {
 
         System.out.println("Type a command to begin (/help for a list of the commands)");
 
-        boolean stopReadInput = false;
-        while (!stopReadInput) {
-            String userCommand = in.nextLine();
+        String userCommand = in.nextLine();
 
-            if (userCommand.equals(Util.helpCommand)) {
-                Util.displayHelpCommand();
-            } else {
-                StringTokenizer tokenizer = new StringTokenizer(userCommand, " ");
-                // Switch over the first token, i.e., the command of the user
-                switch (tokenizer.nextToken()) {
-                    case Util.quitCommand: // The user is leaving the application
-                        System.exit(0);
-                    case Util.listCommand: // The user wants to list the available network interfaces on the machine
-                        Util.listNetworkInterfaces();
-                        break;
-                    case Util.startCommand:
-                        setup(userCommand, "initialize");
-                        break;
-                    case Util.joinCommand: // The user wants to join an existing chat
-                        setup(userCommand, "join");
-                        break;
-                    case Util.chatCommand:
-                        stopReadInput = true;
-                        break;
-                    default:
-                        System.out.println("Unknown command. Type /help to display the available commands");
-                        break;
-                }
+        if (userCommand.equals(Util.helpCommand)) {
+            Util.displayHelpCommand();
+        } else {
+            StringTokenizer tokenizer = new StringTokenizer(userCommand, " ");
+            // Switch over the first token, i.e., the command of the user
+            switch (tokenizer.nextToken()) {
+                case Util.quitCommand: // The user is leaving the application
+                    System.exit(0);
+                case Util.listCommand: // The user wants to list the available network interfaces on the machine
+                    Util.listNetworkInterfaces();
+                    break;
+                case Util.startCommand:
+                    setup(userCommand, "initialize");
+                    break;
+                case Util.joinCommand: // The user wants to join an existing chat
+                    setup(userCommand, "join");
+                    break;
+                default:
+                    System.out.println("Unknown command. Type /help to display the available commands");
+                    break;
             }
         }
+
 
         while (true) {
             System.out.println("Please input chat message");
