@@ -66,7 +66,7 @@ public class ClientThread implements Runnable {
                                         if (!ChatNode.nodeInfo.getInitializeStatus()) {
                                             ChatNode.nodeInfo.setIpAddress(((MessageUtility) message).getNodeInfo().getIpAddress());
                                             ChatNode.nodeInfo.setInitializeStatus(true);
-                                        }
+                                        }  
                                     }
                                     socket.shutdownOutput();
                                     socket.close();
@@ -94,6 +94,7 @@ public class ClientThread implements Runnable {
                                         socket.close();
                                         newNodeInfo = ((MessageLeave) message).getSuccessorNodeInfo();
                                         socket = new Socket(newNodeInfo.getIpAddress(), newNodeInfo.getPort());
+                                        objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                                         successorNode = newNodeInfo;
                                     } else {
                                         objectOutputStream.writeObject(message);
