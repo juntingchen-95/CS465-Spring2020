@@ -108,6 +108,7 @@ public class ServerThread implements Runnable {
                             synchronized (ServerThread.quit) {
                                 ServerThread.quit.compareAndSet(false, true);
                             }
+                            System.exit(0);
                             break;
                     }
                 }
