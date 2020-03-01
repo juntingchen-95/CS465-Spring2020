@@ -22,7 +22,7 @@ public class ClientThread implements Runnable {
 
     public void start() {
         if (clientThread == null) {
-            clientThread = new Thread(this, "serverThread");
+            clientThread = new Thread(this, "clientThread");
             clientThread.start();
         }
     }
@@ -96,6 +96,7 @@ public class ClientThread implements Runnable {
                                         socket = new Socket(newNodeInfo.getIpAddress(), newNodeInfo.getPort());
                                         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                                         successorNode = newNodeInfo;
+
                                     } else {
                                         objectOutputStream.writeObject(message);
                                         objectOutputStream.flush();
