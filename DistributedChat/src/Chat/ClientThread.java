@@ -36,6 +36,7 @@ public class ClientThread implements Runnable {
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                 while (!reConnect) {
                     synchronized (ChatNode.messageQueue) {
+                        // If the queue is empty, suspend the thread and wait for awakening
                         if (ChatNode.messageQueue.isEmpty()) {
                             try {
                                 ChatNode.messageQueue.wait();
@@ -43,9 +44,11 @@ public class ClientThread implements Runnable {
                                 e.printStackTrace();
                             }
                         } else {
+                            // Retrieve message object form message queue
                             Message message = ChatNode.messageQueue.poll();
+                            // Determine the different message types and process them accordingly
                             switch (message.getType()) {
-                                case "initialize":
+                                //case "initialize":
                                 case "join":
                                 case "normal":
                                     objectOutputStream.writeObject(message);
@@ -76,18 +79,20 @@ public class ClientThread implements Runnable {
                                     successorNode = newNodeInfo;
                                     break;
                                 case "selfLeave":
-                                    objectOutputStream.writeObject(
-                                            new MessageLeave("leave", ((MessageUtility) message).getNodeInfo(), successorNode)
-                                    );
+                                    if (successorNode.getDescription().equals(ChatNode.nodeInfo.getDescription())) {
+                                        objectOutputStream.writeObject(new MessageUtility("quit", successorNode));
+                                    } else {
+                                        objectOutputStream.writeObject(
+                                                new MessageLeave("leave", ((MessageUtility) message).getNodeInfo(), successorNode)
+                                        );
+                                    }
                                     objectOutputStream.flush();
                                     reConnect = true;
                                     quit = true;
                                     break;
                                 case "leave":
                                     ChatNode.NodeInfo leaveNodeInfo = ((MessageLeave) message).getNodeInfo();
-                                    System.out.println("get leave test");
                                     if (leaveNodeInfo.getDescription().equals(successorNode.getDescription())) {
-                                        System.out.println("get leave");
                                         objectOutputStream.writeObject(new MessageUtility("quit", successorNode));
                                         objectOutputStream.flush();
                                         socket.shutdownOutput();
@@ -96,7 +101,6 @@ public class ClientThread implements Runnable {
                                         socket = new Socket(newNodeInfo.getIpAddress(), newNodeInfo.getPort());
                                         objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
                                         successorNode = newNodeInfo;
-
                                     } else {
                                         objectOutputStream.writeObject(message);
                                         objectOutputStream.flush();
