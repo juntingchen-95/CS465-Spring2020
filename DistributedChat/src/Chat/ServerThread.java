@@ -29,6 +29,7 @@ public class ServerThread implements Runnable {
     @Override
     public void run() {
         Socket client;
+        // If there is a new connection, start a new child thread to process
         while (quit.compareAndSet(false, false)) {
             try {
                 client = serverSocket.accept();
@@ -63,16 +64,18 @@ public class ServerThread implements Runnable {
                 boolean quitThread = false;
                 ObjectInputStream objectInputStream = new ObjectInputStream(client.getInputStream());
                 while (!quitThread) {
+                    // Read message object form input stream
                     Message message = (Message) objectInputStream.readObject();
+                    // Determine the different message types and process them accordingly
                     switch (message.getType()) {
-                        case "initialize":
+                        /*case "initialize":
                             synchronized (ChatNode.nodeInfo) {
                                 if (!ChatNode.nodeInfo.getInitializeStatus()) {
                                     ChatNode.nodeInfo.setIpAddress(((MessageUtility) message).getNodeInfo().getIpAddress());
                                     ChatNode.nodeInfo.setInitializeStatus(true);
                                 }
                             }
-                            break;
+                            break;*/
                         case "join":
                             ChatNode.NodeInfo nodeInfo = ((MessageUtility) message).getNodeInfo();
                             nodeInfo.setIpAddress(client.getInetAddress().getHostAddress());
@@ -103,11 +106,10 @@ public class ServerThread implements Runnable {
                             }
                             break;
                         case "quit":
-                            System.out.println("Get quit request");
-                            quitThread = true;
                             synchronized (ServerThread.quit) {
                                 ServerThread.quit.compareAndSet(false, true);
                             }
+                            quitThread = true;
                             System.exit(0);
                             break;
                     }
