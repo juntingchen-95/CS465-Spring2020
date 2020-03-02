@@ -17,130 +17,158 @@ public class ChatNode {
     public static Queue<Message> messageQueue;
     public static ClientThread clientThread;
     public static NodeInfo nodeInfo;
-    public static int listeningPort;
     
     public static void main(String[] args) throws IOException {
         messageQueue = new ConcurrentLinkedDeque<Message>();
         nodeInfo = new NodeInfo();
-        initialize();
+        run();
     }
 
-    private static void initialize() throws IOException {
+    /**
+     * Function to initialize the chat node and read user's inputs
+     */
+    private static void run() throws IOException {
         Scanner in = new Scanner(System.in);
 
         System.out.println("######################\n#  Distributed Chat  #\n######################");
+        Util.listNetworkInterfaces();
 
+        // Setup listening port and start listening thread
         boolean portCheck = false;
+        int listeningPort = 0;
         while (!portCheck) {
             System.out.println("\nPlease set up a listening port: ");
-            listeningPort = Integer.parseInt(in.nextLine());
-            if (!Util.checkPort(listeningPort)) {
+            try {
+                listeningPort = Integer.parseInt(in.nextLine());
+                if (!Util.checkPort(listeningPort)) {
+                    System.out.println("Incorrect value of port: must be between 1 and 65,535");
+                } else {
+                    portCheck = true;
+                }
+            } catch (NumberFormatException e) {
                 System.out.println("Incorrect value of port: must be between 1 and 65,535");
-            } else {
-                portCheck = true;
             }
         }
         ServerThread serverThread = new ServerThread(listeningPort);
         serverThread.start();
         nodeInfo.setPort(listeningPort);
-        
-        System.out.println("Your Network information is: ");
-        Util.listNetworkInterfaces();
-        System.out.println("Type a command to begin (/help for a list of the commands)");
 
-        String userCommand = in.nextLine();
-
-        if (userCommand.equals(Util.helpCommand)) {
-            Util.displayHelpCommand();
-        } else {
-            StringTokenizer tokenizer = new StringTokenizer(userCommand, " ");
-            // Switch over the first token, i.e., the command of the user
-            switch (tokenizer.nextToken()) {
-                case Util.startCommand:
-                    setup(userCommand, "initialize");
-                    break;
-                case Util.joinCommand: // The user wants to join an existing chat
-                    setup(userCommand, "join");
-                    break;
-                default:
-                    System.out.println("Unknown command. Type /help to display the available commands");
-                    break;
+        // Command selector
+        System.out.println("\nType a command to begin (/help for a list of the commands)");
+        boolean isContinue = false;
+        while (!isContinue) {
+            String userCommand = in.nextLine();
+            if (userCommand.equals(Util.helpCommand)) {
+                Util.displayHelpCommand();
+            } else {
+                StringTokenizer tokenizer = new StringTokenizer(userCommand, " ");
+                // Switch over the first token, i.e., the command of the user
+                switch (tokenizer.nextToken()) {
+                    case Util.startCommand: // The user wants to start a new chat
+                        isContinue = setup(userCommand, "initialize");
+                        break;
+                    case Util.joinCommand: // The user wants to join an existing chat
+                        isContinue = setup(userCommand, "join");
+                        break;
+                    case Util.listCommand: // The user wants to list the available network interfaces on the machine
+                        Util.listNetworkInterfaces();
+                        break;
+                    case Util.quitCommand: // The user wants to quit the program
+                        System.out.println("Bye");
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Unknown command. Type /help to display the available commands");
+                        break;
+                }
             }
         }
 
-        while (true) {
-            System.out.println("Please input chat message");
+        // Chat message input loop
+        boolean quit = false;
+        while (!quit) {
             String messageString = in.nextLine();
             synchronized (messageQueue) {
-                if (messageString.equals("/quit")) {
+                if (messageString.equals(Util.quitCommand)) {
                     messageQueue.offer(new MessageUtility("selfLeave", nodeInfo));
+                    quit = true;
                 } else {
                     messageQueue.offer(new MessageNormal("normal", messageString, nodeInfo));
                 }
                 messageQueue.notify();
             }
         }
+        System.out.println("Bye");
     }
 
-    private static void setup(String command, String messageType) throws IOException {
-    	if (messageType.equals("initialize")) {
-    		InetAddress addr = InetAddress.getLocalHost();
-    		String ipAddress = addr.getHostAddress();
-    		clientThread = new ClientThread(ipAddress, listeningPort);
+    /**
+     * Function tu setup the node (set to the initial node or join other node)
+     * @param command Correctly formatted /start or /join command with the IP address and the port to connect to.
+     * @param messageType initialize or join
+     */
+    private static boolean setup(String command, String messageType) throws IOException {
+        if (messageType.equals("initialize")) {
+            // Get host IP address, start sending thread, and set to the nodeInfo
+            InetAddress address = InetAddress.getLocalHost();
+            String ipAddress = address.getHostAddress();
+            clientThread = new ClientThread(ipAddress, nodeInfo.getPort());
             clientThread.start();
-            NodeInfo nodeInfo = new NodeInfo();
             nodeInfo.setIpAddress(ipAddress);
-    	}
-    	else {
-    		StringTokenizer tokenizer = new StringTokenizer(command, " ");
+            nodeInfo.setInitializeStatus(true);
+            System.out.println("The initial node setting is: " + nodeInfo.getIpAddress() + ":" + nodeInfo.getPort());
+        } else {
+            StringTokenizer tokenizer = new StringTokenizer(command, " ");
 
-    		// Check there are 3 tokens: the command, the IP address, and the port
-    		if (tokenizer.countTokens() != 3) {
-    			System.out.println("Incorrect join command: the IP address and the port to join are needed");
-    			return;
-    		}
+            // Check there are 3 tokens: the command, the IP address, and the port
+            if (tokenizer.countTokens() != 3) {
+                System.out.println("Incorrect join command: the IP address and the port to join are needed");
+                return false;
+            }
 
-    		// Discard the first token, i.e., /join
-    		tokenizer.nextToken();
+            // Discard the first token, i.e., /join
+            tokenizer.nextToken();
 
-    		// Retrieve the second token, i.e., the IP address of the server to join
-    		String ipAddress = tokenizer.nextToken();
-    		if (!Util.checkIPv4Address(ipAddress)) {
-    			System.out.println("The IP address is not correctly formatted. Correct format: xxx.xxx.xxx.xxx, xxx between 0 and 255");
-    			return;
-    		}
+            // Retrieve the second token, i.e., the IP address of the server to join
+            String ipAddress = tokenizer.nextToken();
+            if (!Util.checkIPv4Address(ipAddress)) {
+                System.out.println("The IP address is not correctly formatted. Correct format: xxx.xxx.xxx.xxx, xxx between 0 and 255");
+                return false;
+            }
 
-    		// Retrieve the third token, i.e., the port of the server to join
-    		int port = Integer.parseInt(tokenizer.nextToken());
-    		if (!Util.checkPort(port)) {
-    			System.out.println("Incorrect value of port: must be between 1 and 65,535");
-    			return;
-    		}
+            // Retrieve the third token, i.e., the port of the server to join
+            int port = Integer.parseInt(tokenizer.nextToken());
+            if (!Util.checkPort(port)) {
+                System.out.println("Incorrect value of port: must be between 1 and 65,535");
+                return false;
+            }
 
-    		InetAddress inetAddress = null;
-    		try {
-    			inetAddress = InetAddress.getByName(ipAddress);
-    		} catch (UnknownHostException e) {
-    			e.printStackTrace();
-    		}
+            // Check IP address
+            InetAddress inetAddress = null;
+            try {
+                inetAddress = InetAddress.getByName(ipAddress);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
 
-    		if (inetAddress == null) {
-    			System.out.println("Could not find the IP address " + ipAddress);
-    			return;
-    		}
+            if (inetAddress == null) {
+                System.out.println("Could not find the IP address " + ipAddress);
+                return false;
+            }
 
-    		clientThread = new ClientThread(ipAddress, port);
-    		clientThread.start();
-    		NodeInfo nodeInfo = new NodeInfo();
-    		nodeInfo.setPort(listeningPort);
-    		
-    		synchronized (messageQueue) {
-    			messageQueue.offer(new MessageUtility(messageType, nodeInfo));
-    			messageQueue.notify();
-    		}
-    	}
+            // Start sending thread and send join request to other node
+            clientThread = new ClientThread(ipAddress, port);
+            clientThread.start();
+            synchronized (messageQueue) {
+                messageQueue.offer(new MessageUtility(messageType, nodeInfo));
+                messageQueue.notify();
+            }
+        }
+        return true;
     }
 
+    /**
+     * The class to record node information (IP address and listening port)
+     */
     public static class NodeInfo implements Serializable {
 
         private String ipAddress;
