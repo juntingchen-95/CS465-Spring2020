@@ -3,7 +3,6 @@ package Chat;
 import Message.*;
 
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
@@ -48,13 +47,16 @@ public class ClientThread implements Runnable {
                             Message message = ChatNode.messageQueue.poll();
                             // Determine the different message types and process them accordingly
                             switch (message.getType()) {
-                                //case "initialize":
                                 case "join":
                                 case "normal":
+                                    // If the message is join or normal message, send the message to the successor node directly
                                     objectOutputStream.writeObject(message);
                                     objectOutputStream.flush();
                                     break;
                                 case "connectNewNode":
+                                    // If the message is connectNewNode message, this thread will close the current socket
+                                    // and create a new socket based on the information in the message, then send current successor
+                                    // node information to the new node
                                     socket.shutdownOutput();
                                     socket.close();
                                     ChatNode.NodeInfo newNodeInfo = ((MessageUtility) message).getNodeInfo();
@@ -65,12 +67,8 @@ public class ClientThread implements Runnable {
                                     successorNode = newNodeInfo;
                                     break;
                                 case "connectNewNode2":
-                                    synchronized (ChatNode.nodeInfo) {
-                                        if (!ChatNode.nodeInfo.getInitializeStatus()) {
-                                            ChatNode.nodeInfo.setIpAddress(((MessageUtility) message).getNodeInfo().getIpAddress());
-                                            ChatNode.nodeInfo.setInitializeStatus(true);
-                                        }  
-                                    }
+                                    // If the message is connectNewNode2 message, this thread will close the current socket
+                                    // and create a new socket based on the information in the message
                                     socket.shutdownOutput();
                                     socket.close();
                                     newNodeInfo = ((MessageUtility) message).getNodeInfo();
@@ -79,6 +77,9 @@ public class ClientThread implements Runnable {
                                     successorNode = newNodeInfo;
                                     break;
                                 case "selfLeave":
+                                    // If the message is selfLeave message, if the successor node is the node itself, it
+                                    // will send quit request to itself. Otherwise it will send leave message to the successor node,
+                                    // the message contains current successor node information. Then this thread will exit
                                     if (successorNode.getDescription().equals(ChatNode.nodeInfo.getDescription())) {
                                         objectOutputStream.writeObject(new MessageUtility("quit", successorNode));
                                     } else {
@@ -91,6 +92,9 @@ public class ClientThread implements Runnable {
                                     quit = true;
                                     break;
                                 case "leave":
+                                    // If the message is leave message, if the leave node is the successor node, it will close
+                                    // current socket and create a new socket based on the information in the message. Otherwise it
+                                    // will send the message to the successor node directly
                                     ChatNode.NodeInfo leaveNodeInfo = ((MessageLeave) message).getNodeInfo();
                                     if (leaveNodeInfo.getDescription().equals(successorNode.getDescription())) {
                                         objectOutputStream.writeObject(new MessageUtility("quit", successorNode));
