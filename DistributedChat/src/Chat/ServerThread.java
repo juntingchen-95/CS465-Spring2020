@@ -68,31 +68,25 @@ public class ServerThread implements Runnable {
                     Message message = (Message) objectInputStream.readObject();
                     // Determine the different message types and process them accordingly
                     switch (message.getType()) {
-                        /*case "initialize":
-                            synchronized (ChatNode.nodeInfo) {
-                                if (!ChatNode.nodeInfo.getInitializeStatus()) {
-                                    ChatNode.nodeInfo.setIpAddress(((MessageUtility) message).getNodeInfo().getIpAddress());
-                                    ChatNode.nodeInfo.setInitializeStatus(true);
-                                }
-                            }
-                            break;*/
                         case "join":
-                            ChatNode.NodeInfo nodeInfo = ((MessageUtility) message).getNodeInfo();
-                            nodeInfo.setIpAddress(client.getInetAddress().getHostAddress());
+                            // If receive join request, add connectNewNode message in the message queue
                             synchronized (ChatNode.messageQueue) {
-                                ChatNode.messageQueue.offer(new MessageUtility("connectNewNode", nodeInfo));
+                                ChatNode.messageQueue.offer(new MessageUtility("connectNewNode", ((MessageUtility) message).getNodeInfo()));
                                 ChatNode.messageQueue.notify();
                             }
                             break;
                         case "connectNewNode":
                         case "connectNewNode2":
                         case "leave":
+                            // If receive connectNewNode, connectNewNode2, and leave message, add it in the message queue directly
                             synchronized (ChatNode.messageQueue) {
                                 ChatNode.messageQueue.offer(message);
                                 ChatNode.messageQueue.notify();
                             }
                             break;
                         case "normal":
+                            // If receive normal message, if the sender is not the node itself, print the message and add it
+                            // in the message queue. Otherwise ignore the message
                             ChatNode.NodeInfo senderNode = ((MessageNormal) message).getNodeInfo();
                             synchronized (ChatNode.nodeInfo) {
                                 if (!senderNode.getDescription().equals(ChatNode.nodeInfo.getDescription())) {
@@ -106,6 +100,7 @@ public class ServerThread implements Runnable {
                             }
                             break;
                         case "quit":
+                            // If receive quit request, the server thread will exit
                             synchronized (ServerThread.quit) {
                                 ServerThread.quit.compareAndSet(false, true);
                             }
