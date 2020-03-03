@@ -4,6 +4,7 @@ import Chat.ChatNode;
 
 public class MessageUtility extends Message {
 
+    // nodeInfo recode message sender's information
     private final ChatNode.NodeInfo nodeInfo;
 
     public MessageUtility(String type, ChatNode.NodeInfo nodeInfo) {
