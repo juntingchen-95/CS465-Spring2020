@@ -4,6 +4,7 @@ import Chat.ChatNode;
 
 public class MessageNormal extends Message {
 
+    // content record the message text
     private final String content;
     private final ChatNode.NodeInfo nodeInfo;
 
