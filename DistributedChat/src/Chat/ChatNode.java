@@ -34,24 +34,39 @@ public class ChatNode {
         Util.listNetworkInterfaces();
 
         // Setup listening port and start listening thread
-        boolean portCheck = false;
-        int listeningPort = 0;
-        while (!portCheck) {
-            System.out.println("\nPlease set up a listening port: ");
+        while (true) {
+            System.out.println("\nPlease set up IP address and listening port: ");
             try {
-                listeningPort = Integer.parseInt(in.nextLine());
-                if (!Util.checkPort(listeningPort)) {
-                    System.out.println("Incorrect value of port: must be between 1 and 65,535");
-                } else {
-                    portCheck = true;
+                StringTokenizer tokenizer = new StringTokenizer(in.nextLine(), " ");
+
+                // Check there are 2 tokens: the IP address and the port
+                if (tokenizer.countTokens() != 2) {
+                    System.out.println("Incorrect input: the IP address and the port are needed");
+                    continue;
                 }
+
+                // Retrieve IP address
+                String ipAddress = tokenizer.nextToken();
+                if (!Util.checkIPv4Address(ipAddress)) {
+                    System.out.println("The IP address is not correctly formatted. Correct format: xxx.xxx.xxx.xxx, xxx between 0 and 255");
+                    continue;
+                }
+                nodeInfo.setIpAddress(ipAddress);
+
+                // Retrieve listening port
+                int port = Integer.parseInt(tokenizer.nextToken());
+                if (!Util.checkPort(port)) {
+                    System.out.println("Incorrect value of port: must be between 1 and 65,535");
+                    continue;
+                }
+                nodeInfo.setPort(port);
+                break;
             } catch (NumberFormatException e) {
                 System.out.println("Incorrect value of port: must be between 1 and 65,535");
             }
         }
-        ServerThread serverThread = new ServerThread(listeningPort);
+        ServerThread serverThread = new ServerThread(nodeInfo.getPort());
         serverThread.start();
-        nodeInfo.setPort(listeningPort);
 
         // Command selector
         System.out.println("\nType a command to begin (/help for a list of the commands)");
@@ -89,6 +104,7 @@ public class ChatNode {
         while (!quit) {
             String messageString = in.nextLine();
             synchronized (messageQueue) {
+                // If input quit command, it will add selfLeave message in the message queue, other wise add normal message
                 if (messageString.equals(Util.quitCommand)) {
                     messageQueue.offer(new MessageUtility("selfLeave", nodeInfo));
                     quit = true;
@@ -108,13 +124,9 @@ public class ChatNode {
      */
     private static boolean setup(String command, String messageType) throws IOException {
         if (messageType.equals("initialize")) {
-            // Get host IP address, start sending thread, and set to the nodeInfo
-            InetAddress address = InetAddress.getLocalHost();
-            String ipAddress = address.getHostAddress();
-            clientThread = new ClientThread(ipAddress, nodeInfo.getPort());
+            // Start sending thread
+            clientThread = new ClientThread(nodeInfo.getIpAddress(), nodeInfo.getPort());
             clientThread.start();
-            nodeInfo.setIpAddress(ipAddress);
-            nodeInfo.setInitializeStatus(true);
             System.out.println("The initial node setting is: " + nodeInfo.getIpAddress() + ":" + nodeInfo.getPort());
         } else {
             StringTokenizer tokenizer = new StringTokenizer(command, " ");
@@ -173,7 +185,6 @@ public class ChatNode {
 
         private String ipAddress;
         private int port;
-        private boolean initializeStatus = false;
 
         public void setIpAddress(String ipAddress) {
             this.ipAddress = ipAddress;
@@ -181,10 +192,6 @@ public class ChatNode {
 
         public void setPort(int port) {
             this.port = port;
-        }
-
-        public void setInitializeStatus(boolean status) {
-            this.initializeStatus = status;
         }
 
         public String getIpAddress() {
@@ -197,10 +204,6 @@ public class ChatNode {
 
         public String getDescription() {
             return ipAddress + ":" + port;
-        }
-
-        public boolean getInitializeStatus() {
-            return initializeStatus;
         }
     }
 }
